@@ -53,13 +53,16 @@ Then open the URL it prints (e.g. http://localhost:5000).
 ## Deploy to GitHub Pages
 
 1. Create a repo (e.g. `Avi583/pinned-logo`, or `Avi583/Avi583.github.io` for your main site).
-2. Push these files to the `main` branch.
-3. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-4. The workflow runs on each push. The site appears at
+2. Push these files to the `main` branch. The workflow builds the app and pushes the
+   static output to the `gh-pages` branch.
+3. Once the `gh-pages` branch exists, in the repo: **Settings → Pages → Build and deployment →
+   Source: Deploy from a branch**, then pick **Branch: `gh-pages`**, folder **`/ (root)`**, and save.
+4. Every push to `main` rebuilds `gh-pages`. The site appears at
    `https://avi583.github.io/<repo-name>/` (or `https://avi583.github.io/` for a `.github.io` repo).
 
 The workflow sets the correct `<base href>` for your repo name, adds `.nojekyll`
 (so the `_framework` folder is served), and copies `index.html` to `404.html`.
+Don't edit the `gh-pages` branch by hand; it is replaced on every build.
 
 ## Tweaking
 
