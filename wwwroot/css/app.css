@@ -1,0 +1,183 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---------- Cork-board background ---------- */
+.stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    background-color: #c8955c;
+    background-image:
+        radial-gradient(rgba(90, 50, 20, .35) 1px, transparent 1.6px),
+        radial-gradient(rgba(255, 230, 190, .25) 1px, transparent 1.6px),
+        radial-gradient(ellipse at center, transparent 55%, rgba(60, 30, 10, .4));
+    background-size: 7px 7px, 11px 11px, 100% 100%;
+    background-position: 0 0, 3px 5px, 0 0;
+}
+
+/* ---------- The logo card (one object) ---------- */
+.card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    padding-top: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: #fffdf7;
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .35), 0 2px 4px rgba(0, 0, 0, .2);
+    cursor: grab;
+    will-change: transform;
+    z-index: 2;
+}
+
+.card.grabbing { cursor: grabbing; }
+
+.logo {
+    width: 150px;
+    height: 150px;
+    pointer-events: none;
+}
+
+.logo-missing {
+    display: none;
+    place-items: center;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #24292f;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+}
+
+.name {
+    font-size: 34px;
+    font-weight: 700;
+    color: #24292f;
+    letter-spacing: .5px;
+    pointer-events: none;
+}
+
+/* ---------- Push pin ---------- */
+.pin {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 35% 30%, #ff9a9a 0 14%, #e02424 45%, #8b0f0f 100%);
+    box-shadow: 2px 4px 5px rgba(0, 0, 0, .45);
+    cursor: pointer;
+    z-index: 5;
+    transition: transform .12s ease;
+}
+
+.pin:hover { transform: translate(-50%, -50%) scale(1.15); }
+
+.pin.falling {
+    pointer-events: none;
+    animation: pin-fall 1s cubic-bezier(.45, 0, 1, .6) forwards;
+}
+
+@keyframes pin-fall {
+    0%   { transform: translate(-50%, -50%) scale(1.3); }
+    15%  { transform: translate(-50%, calc(-50% - 30px)) scale(1.25) rotate(40deg); }
+    90%  { opacity: 1; }
+    100% { transform: translate(-50%, calc(-50% + var(--fall))) rotate(320deg); opacity: 0; }
+}
+
+.pinhole {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: #3a220f;
+    box-shadow: inset 1px 1px 2px #000;
+    z-index: 1;
+}
+
+/* ---------- UI ---------- */
+.hint {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .45);
+    color: #fff;
+    font-size: 14px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.toolbar {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+    font-size: 14px;
+    z-index: 10;
+}
+
+.toolbar button {
+    padding: 6px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #f6f8fa;
+    font: inherit;
+    cursor: pointer;
+}
+
+.toolbar button:hover { background: #eaeef2; }
+
+.toolbar label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.loading {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #c8955c;
+    color: #fff;
+    font-size: 20px;
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 16px;
+    background: #ffe8a3;
+    z-index: 1000;
+}
