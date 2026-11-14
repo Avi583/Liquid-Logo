@@ -305,8 +305,13 @@ public class CardPhysics
             onFloor = true;
             if (vy > 0)
             {
-                va += vx * 0.15;
-                vy = Math.Abs(vy) < 80 ? 0 : -vy * Bounce;
+                if (vy < 80) vy = 0;                     // resting / sliding contact: no spin kick
+                else
+                {
+                    // Real impact: one spin kick from sliding speed, capped so hard throws stay sane
+                    va = Math.Clamp(va + vx * 0.15, -360, 360);
+                    vy = -vy * Bounce;
+                }
             }
         }
         if (Y - hy < 0)
