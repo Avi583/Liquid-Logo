@@ -12,7 +12,7 @@
 
     <div class="hint">
         @(pinned
-            ? "Drag the card to stretch it  ·  Click the pin to pull it out"
+            ? "Drag the card to swing and stretch it  ·  Click the pin to pull it out"
             : "Grab and throw the card  ·  Press \"Pin it back\" to reset")
     </div>
 
@@ -76,6 +76,8 @@
     const double Bounce = 0.35;             // restitution on walls/floor
     const double SpringK = 220, SpringC = 11;
     const double MinScale = 0.35, MaxScale = 4;
+    const double SwingK = 60, SwingC = 3.5;   // pendulum spring pulling a pinned card back to hanging straight
+    const double TurnRate = 10;               // how quickly a carried card turns to face its drag direction (1/s)
 
     enum DragMode { None, Stretch, Carry }
 
@@ -97,8 +99,8 @@
 
     // Drag state
     DragMode mode = DragMode.None;
-    double grabLocalX, grabLocalY, grabSx, grabSy;
-    double carryDx, carryDy, lastPx, lastPy, throwVx, throwVy;
+    double grabLocalX, grabLocalY, grabSx, grabSy, grabDist;
+    double carryLocalX, carryLocalY, lastPx, lastPy, throwVx, throwVy;
     long lastTicks;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -125,7 +127,7 @@
         // Pinned: scale around the pin point so the pin stays put while stretching
         ? $"width:{F(W)}px;height:{F(H)}px;" +
           $"transform-origin:{F(W / 2)}px {F(PinOffset)}px;" +
-          $"transform:translate({F(pinX - W / 2)}px,{F(pinY - PinOffset)}px) scale({F(sx)},{F(sy)})"
+          $"transform:translate({F(pinX - W / 2)}px,{F(pinY - PinOffset)}px) rotate({F(angle)}deg) scale({F(sx)},{F(sy)})"
         // Free: position by centre, rotate and scale around centre
         : $"width:{F(W)}px;height:{F(H)}px;transform-origin:50% 50%;" +
           $"transform:translate({F(x - W / 2)}px,{F(y - H / 2)}px) rotate({F(angle)}deg) scale({F(sx)},{F(sy)})";
@@ -135,26 +137,48 @@
     static double ClampScale(double v) =>
         double.IsFinite(v) ? Math.Clamp(v, MinScale, MaxScale) : MinScale;
 
+    const double Deg = 180 / Math.PI;
+
+    // Rotate a screen-space vector by `deg` (clockwise on screen, same as CSS rotate)
+    static (double X, double Y) Rotate(double x, double y, double deg)
+    {
+        double r = deg / Deg, c = Math.Cos(r), s = Math.Sin(r);
+        return (x * c - y * s, x * s + y * c);
+    }
+
+    // Wrap an angle into (-180, 180]
+    static double Wrap(double deg) => deg - 360 * Math.Round(deg / 360);
+
+    // Pick the equivalent of `target` that is closest to `current` (avoids spinning the long way round)
+    static double Nearest(double target, double current) => current + Wrap(target - current);
+
     // ---------- Input ----------
 
     void OnCardPointerDown(PointerEventArgs e)
     {
         if (pinned)
         {
-            // Remember the grabbed point in unscaled card space (relative to the pin)
+            // Remember the grabbed point in unrotated, unscaled card space (relative to the pin)
             mode = DragMode.Stretch;
+            angle = Wrap(angle);
+            va = 0;
             grabSx = sx;
             grabSy = sy;
-            grabLocalX = (e.ClientX - pinX) / sx;
-            grabLocalY = (e.ClientY - pinY) / sy;
+            double gx = e.ClientX - pinX, gy = e.ClientY - pinY;
+            grabDist = Math.Sqrt(gx * gx + gy * gy);
+            var l = Rotate(gx, gy, -angle);
+            grabLocalX = l.X / sx;
+            grabLocalY = l.Y / sy;
             vsx = vsy = 0;
             forceRelax = false;
         }
         else
         {
+            // Remember the grabbed point in card space so it stays under the cursor while the card turns
             mode = DragMode.Carry;
-            carryDx = e.ClientX - x;
-            carryDy = e.ClientY - y;
+            var l = Rotate(e.ClientX - x, e.ClientY - y, -angle);
+            carryLocalX = l.X / sx;
+            carryLocalY = l.Y / sy;
             vx = vy = va = 0;
             throwVx = throwVy = 0;
             lastPx = e.ClientX;
@@ -169,17 +193,28 @@
         {
             case DragMode.Stretch:
             {
-                // Scale so the grabbed point follows the cursor
                 double nx = e.ClientX - pinX;
                 double ny = e.ClientY - pinY;
 
-                sx = Math.Abs(grabLocalX) > 30
-                    ? ClampScale(nx / grabLocalX)
-                    : ClampScale(grabSx + (Math.Abs(nx) - Math.Abs(grabLocalX * grabSx)) / (W / 2));
+                if (grabDist > 30)
+                {
+                    // Stretch lengthwise (thinning a little) with the pull distance,
+                    // then swing around the pin so the grabbed point points at the cursor
+                    double k = Math.Sqrt(nx * nx + ny * ny) / grabDist;
+                    sy = ClampScale(grabSy * k);
+                    sx = ClampScale(grabSx / Math.Sqrt(Math.Max(k, 1e-3)));
 
-                sy = grabLocalY > 20
-                    ? ClampScale(ny / grabLocalY)
-                    : ClampScale(grabSy + (ny - grabLocalY * grabSy) / (H - PinOffset));
+                    double lx = grabLocalX * sx, ly = grabLocalY * sy;
+                    if (lx * lx + ly * ly > 1)
+                        angle = Nearest((Math.Atan2(ny, nx) - Math.Atan2(ly, lx)) * Deg, angle);
+                }
+                else
+                {
+                    // Grabbed right next to the pin: too close to steer, just stretch
+                    var n = Rotate(nx, ny, -angle);
+                    sx = ClampScale(grabSx + (Math.Abs(n.X) - Math.Abs(grabLocalX * grabSx)) / (W / 2));
+                    sy = ClampScale(grabSy + (n.Y - grabLocalY * grabSy) / (H - PinOffset));
+                }
                 break;
             }
             case DragMode.Carry:
@@ -191,8 +226,19 @@
                 lastPx = e.ClientX;
                 lastPy = e.ClientY;
                 lastTicks = now;
-                x = e.ClientX - carryDx;
-                y = e.ClientY - carryDy;
+
+                // Turn so the top of the logo faces the direction of the drag
+                double speed = Math.Sqrt(throwVx * throwVx + throwVy * throwVy);
+                if (speed > 150)
+                {
+                    double target = Nearest(Math.Atan2(throwVx, -throwVy) * Deg, angle);
+                    angle += (target - angle) * (1 - Math.Exp(-TurnRate * dt));
+                }
+
+                // Keep the grabbed point under the cursor
+                var o = Rotate(carryLocalX * sx, carryLocalY * sy, angle);
+                x = e.ClientX - o.X;
+                y = e.ClientY - o.Y;
                 break;
             }
         }
@@ -203,7 +249,8 @@
         if (mode == DragMode.Stretch)
         {
             mode = DragMode.None;
-            if (elastic) StartLoop();
+            angle = Wrap(angle);
+            StartLoop();                                  // swing back to hanging straight
         }
         else if (mode == DragMode.Carry)
         {
@@ -228,13 +275,14 @@
         holeY = pinY;
         dropCount++;
 
-        // Convert pinned pose (scaled around the pin) into a centre position
-        x = pinX;
-        y = pinY + (H / 2 - PinOffset) * sy;
+        // Convert pinned pose (rotated and scaled around the pin) into a centre position
+        var c = Rotate(0, (H / 2 - PinOffset) * sy, angle);
+        x = pinX + c.X;
+        y = pinY + c.Y;
         vx = 0;
         vy = -120;                                       // tiny hop as the pin pops out
-        angle = 0;
-        va = (Random.Shared.NextDouble() - 0.5) * 90;
+        angle = Wrap(angle);
+        va += (Random.Shared.NextDouble() - 0.5) * 90;
         forceRelax = true;
         StartLoop();
     }
@@ -289,6 +337,16 @@
                 vsx = vsy = 0;
                 forceRelax = false;
             }
+            else more = true;
+        }
+
+        // Pinned card swings back to hanging straight down
+        if (pinned && mode != DragMode.Stretch && (angle != 0 || va != 0))
+        {
+            va += (-SwingK * angle - SwingC * va) * dt;
+            angle += va * dt;
+            if (Math.Abs(angle) < 0.05 && Math.Abs(va) < 0.5)
+                angle = va = 0;
             else more = true;
         }
 
