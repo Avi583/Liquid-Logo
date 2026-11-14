@@ -10,7 +10,10 @@ Avi583Logo.csproj              .NET 10 Blazor WebAssembly project
 CLAUDE.md                      Claude instructions (git-ignored)
 DIRECTORY.md                   This file
 LICENSE                        License
-Pages/Home.razor               The page and all C# logic (stretch, spring, gravity, bounce)
+Pages/Home.razor               Page markup (cork board, card, pin, toolbar)
+Pages/Home.razor.cs            Page code-behind: pointer input, JS loop interop, rendering styles
+Physics/Angles.cs              Angle helpers (Rotate, Wrap, Nearest)
+Physics/CardPhysics.cs         Card state and physics (stretch, spring, swing, gravity, bounce) and tuning constants
 Program.cs                     App startup
 README.md                      User-facing readme
 To-Do-List.txt                 Ideas and planned work

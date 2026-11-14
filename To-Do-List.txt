@@ -4,5 +4,5 @@ To-Do List
 Ideas and planned work.
 
 - Commit wwwroot/images/github-mark.svg to the repo so local runs work without the curl step.
-- Add on-page sliders for the physics constants in Pages/Home.razor (W/H, Gravity, Bounce, SpringK/SpringC, MinScale/MaxScale) so they can be tuned without editing code.
+- Add on-page sliders for the physics constants in Physics/CardPhysics.cs (W/H, Gravity, Bounce, SpringK/SpringC, MinScale/MaxScale) so they can be tuned without editing code.
 - Move the developer notes removed from the README (project layout, GitHub Pages deploy steps, tweakable constants) into a CONTRIBUTING.md or docs file.
