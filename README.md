@@ -1,4 +1,4 @@
-# Avi583 — Pinned GitHub Logo
+# Pinned GitHub Logo C# Demo
 
 **▶ Try it live: https://avi583.github.io/Liquid-Logo/**
 
