@@ -33,6 +33,7 @@ public class CardPhysics
     public double PinY { get; private set; }
     public double HoleX { get; private set; }
     public double HoleY { get; private set; }
+    bool customPin;                                // pin placed by the user (right-click) rather than the default spot
 
     // Stretch (scale) state, with a spring back to 1
     public bool Elastic { get; set; } = true;
@@ -61,11 +62,18 @@ public class CardPhysics
     {
         ViewW = w;
         ViewH = h;
-        if (Pinned) PlacePin();
+        if (!Pinned) return;
+        if (customPin)
+        {
+            PinX = Math.Clamp(PinX, 0, ViewW);
+            PinY = Math.Clamp(PinY, 0, ViewH);
+        }
+        else PlacePin();
     }
 
     void PlacePin()
     {
+        customPin = false;
         PinX = ViewW / 2;
         PinY = Math.Max(70, ViewH * 0.2);
     }
@@ -216,6 +224,19 @@ public class CardPhysics
         vx = vy = va = Angle = 0;
         forceRelax = false;
         PlacePin();
+    }
+
+    /// <summary>Push the pin in at (px, py) and hang the card from it, keeping its tilt so it swings into place.</summary>
+    public void PinAt(double px, double py)
+    {
+        Pinned = true;
+        customPin = true;
+        Mode = DragMode.None;
+        PinX = Math.Clamp(px, 0, ViewW);
+        PinY = Math.Clamp(py, 0, ViewH);
+        Angle = Wrap(Angle);
+        vx = vy = 0;
+        va = 0;
     }
 
     public void ResetStretch() => forceRelax = true;

@@ -46,7 +46,17 @@ public partial class Home : IAsyncDisposable
 
     // ---------- Input ----------
 
-    void OnCardPointerDown(PointerEventArgs e) => body.Grab(e.ClientX, e.ClientY, Now);
+    void OnCardPointerDown(PointerEventArgs e)
+    {
+        if (e.Button == 0) body.Grab(e.ClientX, e.ClientY, Now);   // left button only; right-click pins
+    }
+
+    void OnContextMenu(MouseEventArgs e)
+    {
+        if (!ready) return;
+        body.PinAt(e.ClientX, e.ClientY);
+        StartLoop();
+    }
 
     void OnPointerMove(PointerEventArgs e) => body.DragTo(e.ClientX, e.ClientY, Now);
 

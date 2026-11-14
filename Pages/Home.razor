@@ -8,12 +8,14 @@
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerUp"
-     @onpointerleave="OnPointerUp">
+     @onpointerleave="OnPointerUp"
+     @oncontextmenu="OnContextMenu"
+     @oncontextmenu:preventDefault="true">
 
     <div class="hint">
         @(body.Pinned
-            ? "Drag the card to swing and stretch it  ·  Click the pin to pull it out"
-            : "Grab and throw the card  ·  Press \"Pin it back\" to reset")
+            ? "Drag the card to swing and stretch it  ·  Click the pin to pull it out  ·  Right-click to move the pin"
+            : "Grab and throw the card  ·  Right-click anywhere to pin it there")
     </div>
 
     @if (ready)

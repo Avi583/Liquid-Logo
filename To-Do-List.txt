@@ -6,3 +6,5 @@ Ideas and planned work.
 - Commit wwwroot/images/github-mark.svg to the repo so local runs work without the curl step.
 - Add on-page sliders for the physics constants in Physics/CardPhysics.cs (W/H, Gravity, Bounce, SpringK/SpringC, MinScale/MaxScale) so they can be tuned without editing code.
 - Move the developer notes removed from the README (project layout, GitHub Pages deploy steps, tweakable constants) into a CONTRIBUTING.md or docs file.
+- Right-click on the card itself could pin it through that exact spot (needs a variable pin offset in CardPhysics instead of the fixed PinOffset).
+- Long-press on touch devices as the equivalent of right-click to pin.

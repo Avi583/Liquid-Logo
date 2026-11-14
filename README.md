@@ -9,6 +9,7 @@ An interactive GitHub logo card pinned to a cork board. Stretch it, unpin it, an
 - **Stretch:** click and drag the card. The point you grab follows your cursor.
 - **Snap back:** with **Snap back** on, the card springs back when you let go. Turn it off and the stretch stays.
 - **Unpin:** click the red pin (or the button). The pin pops out and the card falls, bounces and settles. Then you can grab it and throw it.
+- **Right-click:** pins the card anywhere on the board. If it's already pinned, the pin moves there and the card swings into place.
 - **Pin it back:** puts everything back the way it started.
 
 ## Run it yourself
